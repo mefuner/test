@@ -1,0 +1,8 @@
+# 声明AW9523 Right Shield，让ZMK识别
+config SHIELD_AW9523_RIGHT
+    bool "AW9523B Right Half (I2C 0x5B) for Nice Nano V2"
+    depends on BOARD_NICE_NANO_V2
+    select AW9523          // 强制启用AW9523驱动
+    select I2C             // 强制启用I2C
+    help
+      Enable support for AW9523B GPIO expander (address 0x5B) on Nice Nano V2 (right half).

@@ -1,11 +1,11 @@
 manifest:
   remotes:
     - name: zmkfirmware
-      url-base: https://github.com/Amos698
+      url-base: https://github.com/zmkfirmware
   projects:
     - name: zmk
       remote: zmkfirmware
-      revision: feature-test
-      import: app/west.yml
+      revision: main
+      import: app/west.yml  # 导入ZMK官方依赖
   self:
-    path: config
+    path: config  # 自定义配置路径

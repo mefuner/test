@@ -1,0 +1,68 @@
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+    compatible = "zmk,shield-aw9523_right", "zmk,shield";
+
+    // ---------------- AW9523B 0x5B 配置 ----------------
+    aw9523b: aw9523@5b {
+        compatible = "awinic,aw9523";  // 驱动兼容AW9523B
+        reg = <0x5B>;                  // 硬件地址（匹配ADDR引脚电平）
+        i2c-parent = <&i2c1>;          // 绑定Nice Nano V2的I2C1
+        gpio-controller;               // 声明为GPIO控制器
+        #gpio-cells = <2>;             // GPIO参数格式：<引脚 标志>
+        awinic,mode = <0>;             // 0=GPIO模式（禁用LED功能）
+        status = "okay";               // 显式启用节点
+    };
+
+    // ---------------- 矩阵扫描配置 ----------------
+    kscan: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        // 行：P10~P14（输出+高电平有效+上拉，AW9523B推荐配置）
+        row-gpios = <&aw9523b 10 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 11 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 12 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 13 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 14 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT | GPIO_PULL_UP)>;
+        // 列：P00~P04（输入+按下列为低+上拉，匹配硬件规则）
+        col-gpios = <&aw9523b 0 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 1 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 2 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 3 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_PULL_UP)>,
+                    <&aw9523b 4 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_PULL_UP)>;
+        debounce-press-ms = <5>;      // 按下防抖5ms
+        debounce-release-ms = <5>;    // 松开防抖5ms
+        status = "okay";
+    };
+
+    // ---------------- 关联按键映射 ----------------
+    zmk_keymap {
+        compatible = "zmk,keymap";
+        kscan = <&kscan>;  // 绑定到自定义kscan节点
+    };
+};
+
+// ---------------- 启用Nice Nano V2的I2C1（核心修复） ----------------
+&i2c1 {
+    status = "okay";
+    #address-cells = <1>;          // 地址占1个单元格
+    #size-cells = <0>;             // 关键：解决Zephyr reg长度报错
+    sda-pin = <26>;                // Nice Nano V2 SDA（P0.26）
+    scl-pin = <27>;                // Nice Nano V2 SCL（P0.27）
+    clock-frequency = <400000>;    // AW9523B支持400kHz
+    // I2C引脚强制上拉（避免通信失败）
+    pinctrl-0 = <&i2c1_sda_pin &i2c1_scl_pin>;
+    pinctrl-names = "default";
+};
+
+// ---------------- I2C引脚配置（避免复用冲突） ----------------
+&pinctrl {
+    i2c1_sda_pin: i2c1-sda-pin {
+        pinmux = <NRF_P0_26_SDA>;
+        bias-pull-up;  // I2C引脚必须上拉
+    };
+    i2c1_scl_pin: i2c1-scl-pin {
+        pinmux = <NRF_P0_27_SCL>;
+        bias-pull-up;
+    };
+};
