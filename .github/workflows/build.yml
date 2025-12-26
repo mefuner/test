@@ -1,54 +1,5 @@
-name: Build AW9523B Nice Nano V2 Firmware
-
-# 触发条件：推送到main/手动触发/PR
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-      # 1. 拉取ZMK核心代码（官方仓库，兼容AW9523）
-      - name: Checkout ZMK
-        uses: actions/checkout@v4
-        with:
-          repository: zmkfirmware/zmk
-          ref: main
-          path: zmk
-
-      # 2. 拉取自定义AW9523配置
-      - name: Checkout AW9523 Config
-        uses: actions/checkout@v4
-        with:
-          path: config
-
-      # 3. 初始化West构建环境（ZMK必备）
-      - name: West Init & Update
-        run: |
-          cd zmk
-          west init -l app/
-          west update
-          west zephyr-export
-
-      # 4. 编译右键盘固件（AW9523B + Nice Nano V2）
-      - name: Build AW9523B Right Firmware
-        run: |
-          cd zmk
-          west build -s app -d build/right -b nice_nano_v2 -- \
-            -DZMK_CONFIG=${{ github.workspace }}/config \
-            -DSHIELD=aw9523_right \
-            -DZEPHYR_DTC_FLAGS="-Wno-error -Wno-warning"  # 兼容旧版Zephyr
-
-      # 5. 上传固件（可直接下载刷写）
-      - name: Upload Firmware Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: aw9523b-right-nice-nano-v2
-          path: |
-            zmk/build/right/zephyr/zmk.uf2  # 核心固件（拖入DFU即可刷写）
-            zmk/build/right/zephyr/zmk.bin
-            zmk/build/right/zephyr/zmk.hex
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
