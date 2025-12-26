@@ -43,8 +43,8 @@
 // 启用I2C1（核心修改：#size-cells=0，告知解析器I2C设备无长度字段）
 &i2c1 {
     status = "okay";
-    #address-cells = <1>;  // 地址占1个单元格
-    #size-cells = <0>;     // 无长度字段（关键！解决零长度reg报错）
+    address-cells = <1>;  // 地址占1个单元格
+    size-cells = <0>;     // 无长度字段（关键！解决零长度reg报错）
     sda-pin = <26>;
     scl-pin = <27>;
     clock-frequency = <400000>;
