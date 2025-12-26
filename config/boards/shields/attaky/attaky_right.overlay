@@ -4,53 +4,48 @@
 / {
     compatible = "zmk,shield-attaky_right", "zmk,shield";
 
-    // 正确：使用 chosen 指向 kscan
     chosen {
         zmk,kscan = &kscan;
     };
 
-    // AW9523 节点必须作为 I2C1 的子节点
-    // 不能直接放在根节点
+    // 定义并标记 kscan 节点（推荐方案 1）
+    kscan: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN";
+        
+        // 行：AW9523 P10-P14（输出）
+        row-gpios = <&aw9523_right 10 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 11 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 12 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 13 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 14 GPIO_ACTIVE_HIGH>;
+        
+        // 列：AW9523 P00-P04（输入）
+        col-gpios = <&aw9523_right 0 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 1 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 2 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 3 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 4 GPIO_ACTIVE_LOW>;
+        
+        debounce-press-ms = <5>;
+        debounce-release-ms = <5>;
+    };
 };
 
-// 正确启用 I2C1（带 # 前缀）
+// 配置 I2C1 并添加 AW9523
 &i2c1 {
     status = "okay";
-    #address-cells = <1>;   // ✅ 必须带 #
-    #size-cells = <0>;       // ✅ 必须带 #
+    #address-cells = <1>;
+    #size-cells = <0>;
     sda-pin = <26>;
     scl-pin = <27>;
     clock-frequency = <400000>;
 
-    // AW9523 作为 I2C1 的子节点
     aw9523_right: aw9523@5b {
         compatible = "awinic,aw9523";
-        reg = <0x5B>;        // ✅ 正确：仅地址
+        reg = <0x5B>;
         gpio-controller;
         #gpio-cells = <2>;
-        awinic,mode = <0>;  // 强制GPIO模式
+        awinic,mode = <0>;
     };
-};
-
-// 定义 kscan 节点（与 chosen 对应）
-&kscan {
-    compatible = "zmk,kscan-gpio-matrix";
-    label = "KSCAN";
-
-    // 行：AW9523 P10-P14（输出）
-    row-gpios = <&aw9523_right 10 GPIO_ACTIVE_HIGH>,
-                <&aw9523_right 11 GPIO_ACTIVE_HIGH>,
-                <&aw9523_right 12 GPIO_ACTIVE_HIGH>,
-                <&aw9523_right 13 GPIO_ACTIVE_HIGH>,
-                <&aw9523_right 14 GPIO_ACTIVE_HIGH>;
-
-    // 列：AW9523 P00-P04（输入）
-    col-gpios = <&aw9523_right 0 GPIO_ACTIVE_LOW>,
-                <&aw9523_right 1 GPIO_ACTIVE_LOW>,
-                <&aw9523_right 2 GPIO_ACTIVE_LOW>,
-                <&aw9523_right 3 GPIO_ACTIVE_LOW>,
-                <&aw9523_right 4 GPIO_ACTIVE_LOW>;
-
-    debounce-press-ms = <5>;
-    debounce-release-ms = <5>;
 };
