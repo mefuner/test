@@ -1,0 +1,51 @@
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+    compatible = "zmk,shield-attaky_right", "zmk,shield";
+
+    // 自定义kscan节点（唯一扫描器）
+    kscan: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        // 行：AW9523 P10-P14（输出高电平有效）
+        row-gpios = <&aw9523_right 10 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 11 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 12 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 13 GPIO_ACTIVE_HIGH>,
+                    <&aw9523_right 14 GPIO_ACTIVE_HIGH>;
+        // 列：AW9523 P00-P04（输入低电平有效）
+        col-gpios = <&aw9523_right 0 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 1 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 2 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 3 GPIO_ACTIVE_LOW>,
+                    <&aw9523_right 4 GPIO_ACTIVE_LOW>;
+        debounce-press-ms = <5>;
+        debounce-release-ms = <5>;
+    };
+
+    // AW9523（地址0x5B，仅填地址，因为I2C1的#size-cells=0）
+    aw9523_right: aw9523@5b {
+        compatible = "awinic,aw9523";
+        reg = <0x5B>;  // 改回仅地址，关键！
+        i2c-parent = <&i2c1>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        awinic,mode = <0>;  // 强制GPIO模式
+    };
+
+    // 关联按键映射
+    zmk_keymap {
+        compatible = "zmk,keymap";
+        kscan = <&kscan>;
+    };
+};
+
+// 启用I2C1（核心修改：#size-cells=0，告知解析器I2C设备无长度字段）
+&i2c1 {
+    status = "okay";
+    #address-cells = <1>;  // 地址占1个单元格
+    #size-cells = <0>;     // 无长度字段（关键！解决零长度reg报错）
+    sda-pin = <26>;
+    scl-pin = <27>;
+    clock-frequency = <400000>;
+};

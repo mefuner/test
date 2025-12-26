@@ -1,0 +1,13 @@
+file_format: "1"
+id: attaky
+name: attaky
+type: shield
+url: https://github.com/Bastardkb/Charybdis/
+requires: [pro_micro, nice_nano_v2]
+features:
+  - keys
+#  - pointer
+#  - underglow
+siblings:
+  - attaky_left
+  - attaky_right
