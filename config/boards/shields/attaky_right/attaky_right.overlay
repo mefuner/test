@@ -1,0 +1,56 @@
+/dts-v1/;
+
+#include <dt-bindings/zmk/matrix_transform.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+    compatible = "zmk,shield-attaky_right";
+
+    chosen {
+        zmk,kscan = &kscan;
+    };
+
+    // 按键矩阵配置
+    kscan: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN";
+        diode-direction = "col2row";
+
+        // 行：AW9523 P10-P14（输出，高电平有效）
+        row-gpios = <&aw9523 10 GPIO_ACTIVE_HIGH>,
+                    <&aw9523 11 GPIO_ACTIVE_HIGH>,
+                    <&aw9523 12 GPIO_ACTIVE_HIGH>,
+                    <&aw9523 13 GPIO_ACTIVE_HIGH>,
+                    <&aw9523 14 GPIO_ACTIVE_HIGH>;
+
+        // 列：AW9523 P00-P04（输入，低电平有效）
+        col-gpios = <&aw9523 0 GPIO_ACTIVE_LOW>,
+                    <&aw9523 1 GPIO_ACTIVE_LOW>,
+                    <&aw9523 2 GPIO_ACTIVE_LOW>,
+                    <&aw9523 3 GPIO_ACTIVE_LOW>,
+                    <&aw9523 4 GPIO_ACTIVE_LOW>;
+
+        debounce-press-ms = <5>;
+        debounce-release-ms = <5>;
+    };
+};
+
+// I2C1 总线配置
+&i2c1 {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    sda-pin = <26>;      // P0.26
+    scl-pin = <27>;      // P0.27
+    clock-frequency = <400000>;
+
+    // AW9523B 扩展芯片（地址 0x5B）
+    aw9523: aw9523@5b {
+        compatible = "awinic,aw9523";
+        reg = <0x5B>;
+        gpio-controller;
+        #gpio-cells = <2>;
+        ngpios = <16>;
+        awinic,mode = <0>;  // GPIO 模式
+    };
+};

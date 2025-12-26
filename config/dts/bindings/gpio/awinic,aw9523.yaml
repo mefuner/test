@@ -1,0 +1,18 @@
+description: AW9523 I/O Expander
+
+compatible: "awinic,aw9523"
+
+include: [gpio-controller.yaml, i2c-device.yaml]
+
+properties:
+  ngpios:
+    type: int
+    required: true
+    description: Number of GPIOs supported by the controller (16)
+
+  awinic,mode:
+    type: int
+    required: false
+    description: |
+      Configuration mode register value.
+      0 = GPIO mode (default), 1 = LED mode
